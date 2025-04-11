@@ -142,8 +142,8 @@ class App:
                 
 
                 provider:IComponentProvider = selected_option[0]
-                
-                st.markdown(f"**{metadata.name}**: {metadata.description}")
+                    
+                description_holder = st.empty()
                 # Configure the selected scraper
                 schema = provider.get_config_schema()
                 config_key = f"config_{comp_key}"
@@ -166,10 +166,16 @@ class App:
                 else:
                     if st.session_state.get(comp_key) is None:
                         st.session_state[comp_key] = provider.get_component(None)
-                        
-                if st.session_state.get(comp_key) is not None:
-                    # feedback that config is valid   
-                    st.success("Good config")
+                
+                # Add green checkmark if the component is good config
+                instance = st.session_state.get(comp_key, None)
+                description_str = f"**{metadata.name}**: {metadata.description}"
+                if instance is not None:
+                    description_str = "✔️" + description_str
+                else:
+                    description_str = "⚠️" + description_str
+                description_holder.markdown(description_str)
+                
                 return comp_key
         scraper_key = configure_component_loop("Scraper", self.component_repo.get_scrapers())
         st.divider()
@@ -185,17 +191,16 @@ class App:
             scraper = st.session_state.get(scraper_key)
             workflow = self.get_workflow(scraper=scraper)
             if scraper is None:
-                st.warning("Please configure a good scraper to run the workflow.")
-                return
-            
-            if st.button("Scrape"):
-                links_df = st.session_state.get("links_df")
-                links = links_df["link"].tolist()
-                bar = st.progress(0.0, text="Scraping...")
-                progress_delta = 1.0/len(links)
-                for result in workflow.scrape_generator(links, overwrite=True):
-                    bar.progress(progress_delta, text="Scraping...")
-                bar.empty()
+                st.warning("Please configure a good scraper to scrape links.")
+            else:
+                if st.button("Scrape"):
+                    links_df = st.session_state.get("links_df")
+                    links = links_df["link"].tolist()
+                    bar = st.progress(0.0, text="Scraping...")
+                    progress_delta = 1.0/len(links)
+                    for result in workflow.scrape_generator(links, overwrite=True):
+                        bar.progress(progress_delta, text=f"Scraping {len(links)} links...")
+                    bar.empty()
             scrapes_df = workflow.get_scrapes()
             if "metadata" in scrapes_df.columns:
                 scrapes_df = scrapes_df.drop(columns=["metadata"])
@@ -216,18 +221,19 @@ class App:
                 
         def run_analyze_section():
             analyzer = st.session_state.get(analyzer_key)
-            if analyzer is None:
-                st.warning("Please configure a good analyzer to run the workflow.")
-                return
             workflow = self.get_workflow(analyzer=analyzer)
-            scrapes_df = workflow.get_scrapes()
-            if st.button("Analyze"):
-                bar = st.progress(0.0, text="Analyzing...")
-                scrapes_length = len(scrapes_df) if scrapes_df is not None else 0
-                progress_delta = 1.0/scrapes_length if scrapes_length > 0 else 1.0
-                for result in workflow.analyze_generator(overwrite=True):
-                    bar.progress(progress_delta, text="Analyzing...")
-                bar.empty()
+            
+            if analyzer is None:
+                st.warning("Please configure a good analyzer to analyze content.")
+            else:
+                scrapes_df = workflow.get_scrapes()
+                if st.button("Analyze"):
+                    bar = st.progress(0.0, text="Analyzing...")
+                    scrapes_length = len(scrapes_df) if scrapes_df is not None else 0
+                    progress_delta = 1.0/scrapes_length if scrapes_length > 0 else 1.0
+                    for result in workflow.analyze_generator(overwrite=True):
+                        bar.progress(progress_delta, text=f"Analyzing {scrapes_length} content items....")
+                    bar.empty()
             analysis_df = workflow.get_analyses()
             if analysis_df is not None and len(analysis_df) > 0:
                 # Check for analysis_success column
