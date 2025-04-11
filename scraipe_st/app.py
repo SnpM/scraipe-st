@@ -191,7 +191,7 @@ class App:
             scraper = st.session_state.get(scraper_key)
             workflow = self.get_workflow(scraper=scraper)
             if scraper is None:
-                st.warning("Please configure a good scraper to scrape links.")
+                st.warning("Configure a good scraper to scrape links.")
             else:
                 if st.button("Scrape"):
                     links_df = st.session_state.get("links_df")
@@ -224,7 +224,7 @@ class App:
             workflow = self.get_workflow(analyzer=analyzer)
             
             if analyzer is None:
-                st.warning("Please configure a good analyzer to analyze content.")
+                st.warning("Configure a good analyzer to analyze content.")
             else:
                 scrapes_df = workflow.get_scrapes()
                 if st.button("Analyze"):
