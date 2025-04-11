@@ -76,7 +76,7 @@ _default_scrapers = [
 
 import os
 default_llm_instruction = \
-"""Identify market gaps from the text with a focus on unmet needs or complaints.
+"""Read the attached document. Identify market gaps with a focus on unmet needs or complaints.
 Output the result with the following JSON format:
 {
     "gaps": [need1, ...]
@@ -93,9 +93,11 @@ _default_analyzers = [
     (TextStatsAnalyzer(), ComponentMetadata(
         name="Text Stats Analyzer", description="Computes word count, character count, sentence count, and average word length.")),
     (DefaultcomponentProvider(LlmAnalyzerSchema, target_class= OpenAiAnalyzer, default_config=default_openai_config), ComponentMetadata(
-        name="OpenAI Analyzer", description="Analyzes text using the OpenAI API. Set the API key and instruction in the config.")),
+        name="OpenAI Analyzer",
+        description="Analyzes text using the OpenAI API. Configure [the API key](https://platform.openai.com/api-keys) and instruction.")),
     (DefaultcomponentProvider(LlmAnalyzerSchema, target_class= GeminiAnalyzer, default_config=default_gemini_config), ComponentMetadata(
-        name="Gemini Analyzer", description="Analyzes text using the Gemini API. Set the API key and instruction in the config.")),
+        name="Gemini Analyzer",
+        description="Analyzes text using the Gemini API. Configure [the API key](https://ai.google.dev/gemini-api/docs/api-key) and instruction.")),
 ]
 
 def register_default_components(repo: ComponentRepo):

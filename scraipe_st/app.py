@@ -50,7 +50,7 @@ class App:
     def main(self):
         st.set_page_config(
             page_title=self.title,
-            page_icon=":mag_right:",
+            page_icon="🧰",
             layout="wide",
             initial_sidebar_state="expanded",
         )
@@ -151,7 +151,7 @@ class App:
                 
                                 
                 if schema:
-                    config = sp.pydantic_form(f"{comp_key}_form", config or provider.get_default_config() or schema, submit_label="Create",)        
+                    config = sp.pydantic_form(f"{comp_key}_form", config or provider.get_default_config() or schema, submit_label="Configure",)        
                     if config is not None:
                         try:
                             st.session_state[comp_key] = provider.get_component(config)                            
@@ -197,9 +197,10 @@ class App:
                     links_df = st.session_state.get("links_df")
                     links = links_df["link"].tolist()
                     bar = st.progress(0.0, text="Scraping...")
-                    progress_delta = 1.0/len(links)
+                    acc = 0
                     for result in workflow.scrape_generator(links, overwrite=True):
-                        bar.progress(progress_delta, text=f"Scraping {len(links)} links...")
+                        bar.progress(acc/len(links), text=f"Scraping {len(links)} links...")
+                        acc += 1
                     bar.empty()
             scrapes_df = workflow.get_scrapes()
             if "metadata" in scrapes_df.columns:
@@ -230,9 +231,10 @@ class App:
                 if st.button("Analyze"):
                     bar = st.progress(0.0, text="Analyzing...")
                     scrapes_length = len(scrapes_df) if scrapes_df is not None else 0
-                    progress_delta = 1.0/scrapes_length if scrapes_length > 0 else 1.0
+                    acc = 0
                     for result in workflow.analyze_generator(overwrite=True):
-                        bar.progress(progress_delta, text=f"Analyzing {scrapes_length} content items....")
+                        bar.progress(acc/scrapes_length, text=f"Analyzing {scrapes_length} content items....")
+                        acc += 1
                     bar.empty()
             analysis_df = workflow.get_analyses()
             if analysis_df is not None and len(analysis_df) > 0:
