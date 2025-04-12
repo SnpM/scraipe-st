@@ -64,66 +64,79 @@ class App:
         #===Links===
         st.subheader("Edit Links")
 
+        links_upload_key = "links_upload"
         uploaded_file = st.file_uploader(
             "Choose a csv, txt, or Excel file", type=["csv","xlsx","xls","txt"],
             accept_multiple_files=False,
+            key=links_upload_key,
         )
-    
         
         if uploaded_file is not None:
-            if uploaded_file.name.endswith(".csv"):
-                st.session_state["links_df"] = pd.read_csv(uploaded_file)
-            elif uploaded_file.name.endswith((".xlsx", ".xls")):
-                st.session_state["links_df"] = pd.read_excel(uploaded_file)
-            elif uploaded_file.name.endswith(".txt"):
-                st.session_state["links_df"] = pd.read_csv(uploaded_file, sep="\t")
-            else:
-                st.error("Unsupported file type. Please upload a csv, txt, or Excel file.")    
-                            
-            # Validate the dataframe has a 'links' column case insensitive
-            if links_df := st.session_state.get("links_df") is not None:
-                if "link" not in links_df.columns:
-                    st.error("The uploaded file must contain URL links in the 'link' column")
-                    st.session_state["links_df"] = None
-                    uploaded_file = None
+            df:pd.DataFrame = None
+            try:
+                if uploaded_file.name.endswith(".csv"):
+                    df = pd.read_csv(uploaded_file)
+                elif uploaded_file.name.endswith((".xlsx", ".xls")):
+                    df = pd.read_excel(uploaded_file)
+                elif uploaded_file.name.endswith(".txt"):
+                    df = pd.read_csv(uploaded_file, sep="\t")
                 else:
-                    st.session_state["links_df"] = links_df["link"].dropna().reset_index(drop=True)
+                    st.error("Unsupported file type. Please upload a csv, txt, or Excel file.")    
+            except Exception as e:
+                st.error("Unable to read the file. Please check the file format.")
+            
+            if df: 
+                # Validate the dataframe has a 'links' column case insensitive
+                if "link" not in df.columns:
+                    st.error("The uploaded file must contain URL links in the 'link' column")
+                else:
+                    st.session_state["initial_links_df"] = df["link"].dropna().reset_index(drop=True)
         
       
         # Set default links if no file is uploaded
-        if st.session_state.get("links_df") is None:
-            st.session_state["links_df"] = pd.DataFrame(
+        if st.session_state.get("initial_links_df") is None:
+            st.session_state["initial_links_df"] = pd.DataFrame(
                 data={
                     'link': get_default_links()
                 }
             )
         
         with st.expander("Edit", expanded=True):
-            column_config = {
-                "link": st.column_config.LinkColumn("link"),
-            }
-            edited_links = st.data_editor(
-                st.session_state["links_df"], num_rows="dynamic",
-                use_container_width=True,hide_index=False,
-                column_config=column_config,
-                
-            )
-            
-
-            if (st.button("Generate 10 Links", key="generate_links", help="Generate links from Wikipedia")):
-                links = get_random_wikipedia_links(10)
-                # append links to the dataframe. If dataframe has extra columns, just set to null
-                new_links_df = pd.DataFrame(
-                    data={
-                        'link': links
-                    }
+            # Use a fragment to limit rerun scope
+            @st.fragment()
+            def links_fragment():
+                column_config = {
+                    "link": st.column_config.LinkColumn("link"),
+                }
+                edited_links = st.data_editor(
+                    st.session_state["initial_links_df"], num_rows="dynamic",
+                    use_container_width=True,hide_index=True,
+                    column_config=column_config,
                 )
-                # Check if the dataframe has extra columns
-                if len(st.session_state["links_df"].columns) > 1:
-                    for col in st.session_state["links_df"].columns[1:]:
-                        new_links_df[col] = None
-                st.session_state["links_df"] = pd.concat([st.session_state["links_df"], new_links_df], ignore_index=True)
-                st.rerun()
+                st.session_state["links_df"] = edited_links
+
+                st.write(f"{len(edited_links)} links")
+                if (st.button("Generate 10 Links", key="generate_links", help="Generate links from Wikipedia")):
+                    links = get_random_wikipedia_links(10)
+                    # append links to the dataframe. If dataframe has extra columns, just set to null
+                    new_links_df = pd.DataFrame(
+                        data={
+                            'link': links
+                        }
+                    )
+                    # Check if the dataframe has extra columns that aren't 'link'
+                    links_df = st.session_state["links_df"]
+                    if len(links_df.columns) > 1:
+                        for col in links_df.columns:
+                            if col != "link":
+                                new_links_df[col] = None
+                    
+                    # When programatically changing the dataframe going into the data_editor,
+                    # update both teh initial and edited dataframes and rerun
+                    st.session_state["initial_links_df"] = pd.concat([links_df, new_links_df], ignore_index=True)
+                    st.session_state["links_df"] = pd.concat([links_df, new_links_df], ignore_index=True)
+                    st.rerun(scope="fragment")
+            links_fragment()
                 
             
         st.divider()

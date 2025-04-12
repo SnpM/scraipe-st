@@ -20,9 +20,9 @@ def label2anchor(label:str) -> str:
 def get_random_wikipedia_links(n=10):
     random_links = []
     base_url = "https://en.wikipedia.org"
-    for i in range(n):
-        # Disable redirects so that the random link is in the "Location" header.
-        response = requests.get("https://en.wikipedia.org/wiki/Special:Random", allow_redirects=False)
+    for _ in range(n):
+        # Use HEAD instead of GET to only retrieve headers
+        response = requests.head("https://en.wikipedia.org/wiki/Special:Random", allow_redirects=False)
         # Extract the random link from the "Location" header.
         if 'Location' in response.headers:
             link = response.headers['Location']
