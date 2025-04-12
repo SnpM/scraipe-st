@@ -4,7 +4,7 @@ from typing import Any, Type, Optional
 from pydantic import BaseModel, ValidationError
 from scraipe import IAnalyzer, IScraper
 import logging
-from scraipe_st.experimental.telegram_component_provider import TelegramComponentProvider
+from scraipe_st.telegram_component_provider import TelegramComponentProvider
 
 _default_links = [
     "https://example.com",

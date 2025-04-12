@@ -48,6 +48,7 @@ class TelegramComponentProvider(IComponentProvider):
     @st.dialog("QR Code")
     def qr_dialog(self, img):
         st.image(img, caption="Scan this QR code with your Telegram app.")
+        
     def get_component(self, config):
         
         try:
