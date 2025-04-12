@@ -4,6 +4,7 @@ from collections import OrderedDict
 from pydantic import BaseModel, ValidationError
 import logging
 from abc import ABC, abstractmethod
+from enum import Enum
 
 class ComponentMetadata:
     """
@@ -13,7 +14,11 @@ class ComponentMetadata:
         self.name = name
         self.description = description
     
-
+class ComponentStatus(Enum):
+    READY = 1
+    DELAYED = 0
+    FAILED = -1
+    
 class IComponentProvider():
     """
     A class that contains the component configuration blueprint for the UI.
@@ -37,6 +42,17 @@ class IComponentProvider():
             Any: The component instance.
         """
         ...
+        
+    def get_component_status(self, component) -> ComponentStatus:
+        """
+        Get the status of the component.
+        
+        Returns:
+            ComponentStatus: The status of the component.
+        """
+        if component is not None:
+            return ComponentStatus.READY
+        return ComponentStatus.FAILED
     
     def get_default_config(self) -> BaseModel:
         """
@@ -46,14 +62,13 @@ class IComponentProvider():
             BaseModel: The default configuration instance.
         """
         return None
-
         
 class ProvidedComponent(IComponentProvider):
     """The component is already instantiated and can be used without additional configuration."""
     def __init__(self, component:Any):
         self.component = component
     def get_config_schema(self):
-        pass
+        return None
     def get_component(self, config:BaseModel) -> Any:
         return self.component
     def get_default_component(self):
@@ -69,6 +84,7 @@ class ComponentRepo:
         """
         self.registered_scrapers = OrderedDict()
         self.registered_analyzers = OrderedDict()
+    
     
     def get_unique_name(self, name:str, repo:dict[str,Any]) -> str:
         """

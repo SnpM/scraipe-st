@@ -1,9 +1,9 @@
 import streamlit as st
-from component_repo import ComponentRepo, ComponentMetadata, IComponentProvider
+from component_repo import ComponentRepo, ComponentMetadata, IComponentProvider, ComponentStatus
 from streamlit_scroll_navigation import scroll_navbar
 from utils import label2anchor
 import pandas as pd
-from default_config import get_default_links, register_default_components
+from scraipe_st.default_config import get_default_links, register_default_components
 from scraipe import Workflow
 
 from utils import get_random_wikipedia_links
@@ -154,7 +154,8 @@ class App:
                     config = sp.pydantic_form(f"{comp_key}_form", config or provider.get_default_config() or schema, submit_label="Configure",)        
                     if config is not None:
                         try:
-                            st.session_state[comp_key] = provider.get_component(config)                            
+                            if config != st.session_state.get(config_key, None):
+                                st.session_state[comp_key] = provider.get_component(config)                            
                         except Exception as e:
                             import traceback
                             traceback.print_exc()
@@ -164,18 +165,22 @@ class App:
                             st.session_state[config_key] = config
 
                 else:
+                    # No config needed, just get the component as needed
                     if st.session_state.get(comp_key) is None:
                         st.session_state[comp_key] = provider.get_component(None)
                 
-                # Add green checkmark if the component is good config
-                instance = st.session_state.get(comp_key, None)
+                
+                
+                component = st.session_state.get(comp_key, None)
                 description_str = f"**{metadata.name}**: {metadata.description}"
-                if instance is not None:
+                status = provider.get_component_status(component)
+                if status == ComponentStatus.READY:
+                    # Add green checkmark if the component is good config
                     description_str = "✔️" + description_str
                 else:
                     description_str = "⚠️" + description_str
                 description_holder.markdown(description_str)
-                
+                               
                 return comp_key
         scraper_key = configure_component_loop("Scraper", self.component_repo.get_scrapers())
         st.divider()
@@ -198,6 +203,7 @@ class App:
                     links = links_df["link"].tolist()
                     bar = st.progress(0.0, text="Scraping...")
                     acc = 0
+                    workflow.clear_scrapes()
                     for result in workflow.scrape_generator(links, overwrite=True):
                         bar.progress(acc/len(links), text=f"Scraping {len(links)} links...")
                         acc += 1
@@ -229,6 +235,7 @@ class App:
             else:
                 scrapes_df = workflow.get_scrapes()
                 if st.button("Analyze"):
+                    workflow.clear_analyses()
                     bar = st.progress(0.0, text="Analyzing...")
                     scrapes_length = len(scrapes_df) if scrapes_df is not None else 0
                     acc = 0

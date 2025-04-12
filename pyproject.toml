@@ -16,6 +16,7 @@ pandas = "*"
 requests = "*"
 streamlit-pydantic = "0.6.0"
 pydantic-settings = "*"
+qrcode = ">=8.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"

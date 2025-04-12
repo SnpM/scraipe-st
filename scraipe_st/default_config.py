@@ -4,11 +4,13 @@ from typing import Any, Type, Optional
 from pydantic import BaseModel, ValidationError
 from scraipe import IAnalyzer, IScraper
 import logging
+from scraipe_st.experimental.telegram_component_provider import TelegramComponentProvider
 
 _default_links = [
     "https://example.com",
     "https://rickandmortyapi.com/api/character/1",
-    "https://ckaestne.github.io/seai/"
+    "https://ckaestne.github.io/seai/",
+    "https://t.me/TelegramTips/515",
 ]
 
 def get_default_links():
@@ -60,9 +62,12 @@ class DefaultcomponentProvider(IComponentProvider):
 from typing_extensions import Annotated
 from pydantic import Field
 class LlmAnalyzerSchema(BaseModel):
-    api_key: str = Field(..., description="API key for the LLM service.")
-    instruction:str = Field(..., format="multi-line", description="Craft an instruction prompt to tell the LLM how to analyze the content.")
-    
+    api_key: str = Field(
+        ..., description="API key for the LLM service.",
+        st_kwargs_type="password")
+    instruction:str = Field(
+        ..., format="multi-line", description="Craft an instruction prompt to tell the LLM how to analyze the content.",
+        st_kwargs_height=150,)
 
 _default_scrapers = [
     (TextScraper(), ComponentMetadata(
@@ -71,12 +76,14 @@ _default_scrapers = [
         name="News Scraper", description="Scrapes and cleans news articles.")),
     (RawScraper(), ComponentMetadata(
         name="Raw Scraper", description="Scrapes raw HTTP content.")),
+    (TelegramComponentProvider(), ComponentMetadata(
+        name="Telegram Message Scraper", description="Scrapes messages from a Telegram channel.")),
 ]
 
 
 import os
 default_llm_instruction = \
-"""Read the attached document. Identify market gaps with a focus on unmet needs or complaints.
+"""Read the attached document. Identify market gaps that are mentioned in the text with a focus on unmet needs or complaints.
 Output the result with the following JSON format:
 {
     "gaps": [need1, ...]
