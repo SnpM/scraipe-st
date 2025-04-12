@@ -62,6 +62,15 @@ class IComponentProvider():
             BaseModel: The default configuration instance.
         """
         return None
+    
+    def late_update(self, component:Any) -> None:
+        """
+        Run logic at the end of app's configuration loop.
+        
+        Args:
+            component (Any): The component instance.
+        """
+        pass
         
 class ProvidedComponent(IComponentProvider):
     """The component is already instantiated and can be used without additional configuration."""

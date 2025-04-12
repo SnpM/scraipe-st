@@ -11,6 +11,7 @@ _default_links = [
     "https://rickandmortyapi.com/api/character/1",
     "https://ckaestne.github.io/seai/",
     "https://t.me/TelegramTips/515",
+    "https://en.wikipedia.org/wiki/CSS_Industries",
 ]
 
 def get_default_links():
@@ -83,7 +84,7 @@ _default_scrapers = [
 
 import os
 default_llm_instruction = \
-"""Read the attached document. Identify market gaps that are mentioned in the text with a focus on unmet needs or complaints.
+"""Read the attached document. Identify market gaps that are mentioned in the text. Focus on unmet needs or complaints.
 Output the result with the following JSON format:
 {
     "gaps": [need1, ...]

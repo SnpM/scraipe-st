@@ -129,39 +129,59 @@ class App:
         st.divider()
         
         #===Scrapers===
-
+        print("1")
         ## Display the selected scraper's metadata
         def configure_component_loop(comp:str, provider_options:list):
             st.subheader(f"Configure {comp}")
         
             # Select a scraper from the component repository
-            selected_option = st.selectbox(f"Select {comp}", provider_options, format_func=lambda x: x[1].name, key=f"select_{comp}")
-            if selected_option is not None:
+            option_idx_key = f"select_{comp}_idx"
+            option_indices = list(range(len(provider_options)))
+            
+            # If options list shrinks, cap the selected index
+            selected_index=st.session_state.get(option_idx_key, 0)
+            if selected_index >= len(option_indices):
+                selected_index = len(option_indices) - 1
+            
+            selected_index = st.selectbox(
+                f"Select {comp}", options=option_indices,
+                format_func=lambda x: provider_options[x][1].name,
+                index=selected_index, key=f"{comp}_selectbox")
+            st.session_state[option_idx_key] = selected_index
+            
+            print("2", selected_index)
+            if selected_index is not None:
+                selected_option = provider_options[selected_index]
                 metadata:ComponentMetadata = selected_option[1]
                 comp_key = f"{comp}_{metadata.name}"
                 
 
                 provider:IComponentProvider = selected_option[0]
                     
-                description_holder = st.empty()
-                # Configure the selected scraper
+                description_holder = st.container(key=f"{comp}_description")
+                # Configure the selected scisraper
                 schema = provider.get_config_schema()
                 config_key = f"config_{comp_key}"
                 config = st.session_state.get(config_key, None)
                 
                                 
                 if schema:
-                    config = sp.pydantic_form(f"{comp_key}_form", config or provider.get_default_config() or schema, submit_label="Configure",)        
+                    from pydantic import BaseModel
+                    config:BaseModel = sp.pydantic_form(
+                        f"{comp_key}_form", config or provider.get_default_config() or schema,
+                        submit_label="Configure")    
                     if config is not None:
                         try:
-                            if config != st.session_state.get(config_key, None):
-                                st.session_state[comp_key] = provider.get_component(config)                            
+                            #if config != st.session_state.get(config_key, None):
+                            # Unique submission was made, create the component
+                            st.session_state[comp_key] = provider.get_component(config)
                         except Exception as e:
                             import traceback
                             traceback.print_exc()
                             st.error(f"Error creating {comp}: {e}")
                             st.session_state[comp_key] = None
                         else:
+                            print("setting config", config)
                             st.session_state[config_key] = config
 
                 else:
@@ -169,17 +189,22 @@ class App:
                     if st.session_state.get(comp_key) is None:
                         st.session_state[comp_key] = provider.get_component(None)
                 
-                
-                
                 component = st.session_state.get(comp_key, None)
                 description_str = f"**{metadata.name}**: {metadata.description}"
                 status = provider.get_component_status(component)
+                print("3", component)
+                if component is not None:
+                    from scraipe.extended import TelegramMessageScraper
+                    if isinstance(component, TelegramMessageScraper):
+                        print (component.is_authenticated())
                 if status == ComponentStatus.READY:
                     # Add green checkmark if the component is good config
                     description_str = "✔️" + description_str
                 else:
                     description_str = "⚠️" + description_str
                 description_holder.markdown(description_str)
+                
+                provider.late_update(component)
                                
                 return comp_key
         scraper_key = configure_component_loop("Scraper", self.component_repo.get_scrapers())
