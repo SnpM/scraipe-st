@@ -4,6 +4,9 @@ from scraipe.classes import IScraper, IAnalyzer
 from collections import OrderedDict
 from pydantic import BaseModel
 import requests
+import aiohttp
+import asyncio
+from scraipe.async_util.async_manager import AsyncManager
 
 def label2anchor(label:str) -> str:
     """
@@ -17,17 +20,30 @@ def label2anchor(label:str) -> str:
     """
     return label.replace(" ", "-").lower()
 
-def get_random_wikipedia_links(n=10):
-    random_links = []
+async def _get_random_wikipedia_links(n=10):
     base_url = "https://en.wikipedia.org"
-    for _ in range(n):
-        # Use HEAD instead of GET to only retrieve headers
-        response = requests.head("https://en.wikipedia.org/wiki/Special:Random", allow_redirects=False)
-        # Extract the random link from the "Location" header.
-        if 'Location' in response.headers:
-            link = response.headers['Location']
-            # If the link is relative, prepend the base URL.
-            if link.startswith('/'):
-                link = base_url + link
-            random_links.append(link)
-    return random_links
+    MAX_WORKERS = 4
+    async with aiohttp.ClientSession() as session:
+        sem = asyncio.Semaphore(MAX_WORKERS)
+        async def fetch_random_link():
+            async with sem:
+                async with session.head("https://en.wikipedia.org/wiki/Special:Random", allow_redirects=False) as response:
+                    link = response.headers.get("Location")
+                    if link and link.startswith("/"):
+                        link = base_url + link
+                    return link
+        tasks = [fetch_random_link() for _ in range(n)]
+        results = await asyncio.gather(*tasks)
+    return [r for r in results if r]
+
+def get_random_wikipedia_links(n=10):
+    """
+    Get n random Wikipedia links.
+    
+    Args:
+        n (int): The number of random links to get.
+        
+    Returns:
+        list: A list of random Wikipedia links.
+    """
+    return AsyncManager.get_executor().run(_get_random_wikipedia_links(n))
