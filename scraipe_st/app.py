@@ -129,7 +129,6 @@ class App:
         st.divider()
         
         #===Scrapers===
-        print("1")
         ## Display the selected scraper's metadata
         def configure_component_loop(comp:str, provider_options:list):
             st.subheader(f"Configure {comp}")
@@ -149,7 +148,6 @@ class App:
                 index=selected_index, key=f"{comp}_selectbox")
             st.session_state[option_idx_key] = selected_index
             
-            print("2", selected_index)
             if selected_index is not None:
                 selected_option = provider_options[selected_index]
                 metadata:ComponentMetadata = selected_option[1]
@@ -181,7 +179,6 @@ class App:
                             st.error(f"Error creating {comp}: {e}")
                             st.session_state[comp_key] = None
                         else:
-                            print("setting config", config)
                             st.session_state[config_key] = config
 
                 else:
@@ -192,11 +189,6 @@ class App:
                 component = st.session_state.get(comp_key, None)
                 description_str = f"**{metadata.name}**: {metadata.description}"
                 status = provider.get_component_status(component)
-                print("3", component)
-                if component is not None:
-                    from scraipe.extended import TelegramMessageScraper
-                    if isinstance(component, TelegramMessageScraper):
-                        print (component.is_authenticated())
                 if status == ComponentStatus.READY:
                     # Add green checkmark if the component is good config
                     description_str = "✔️" + description_str

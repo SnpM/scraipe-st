@@ -48,7 +48,6 @@ class TelegramComponentProvider(IComponentProvider):
     @st.dialog("QR Code")
     def qr_dialog(self, img):
         st.image(img, caption="Scan this QR code with your Telegram app.")
-        print("fdsa")
     def get_component(self, config):
         
         try:
@@ -58,12 +57,9 @@ class TelegramComponentProvider(IComponentProvider):
             logging.error(f"Validation error: {e}")
             raise e
         
-        print("asdf")
         try:
             self.is_logging_in.set()
-            print("set")
             def handle_login_done(auth_phase:AuthPhase):
-                print("cleared")
                 self.is_logging_in.clear()
                     
             # Create an instance of the target class with the validated config
@@ -89,7 +85,6 @@ class TelegramComponentProvider(IComponentProvider):
         if self.is_logging_in.is_set():              
             # this should spawn in different execution context
             self.qr_dialog(buf.getvalue())  
-            print("after qr dialog")
         
         component:TelegramMessageScraper
         if component is None:
@@ -100,10 +95,9 @@ class TelegramComponentProvider(IComponentProvider):
     def late_update(self, component):
         if self.is_logging_in.is_set():
             while True:
-                print("blocked")
                 # Block until login completes
                 if not self.is_logging_in.is_set():
-                    print("rerunning")
+                    print("Login over, calling st.rerun()")
                     st.rerun(scope="app")
                     break
                 time.sleep(.4)
