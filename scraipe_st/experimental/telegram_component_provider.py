@@ -4,7 +4,7 @@ from pydantic import ValidationError, BaseModel, Field
 import logging
 import streamlit as st
 from scraipe.extended import TelegramMessageScraper
-from scraipe.extended.telegram_message_scraper import AuthPhase
+from scraipe.extended.telegram_message_scraper import AuthState, QrLoginContext
 import os
 import qrcode
 import streamlit as st
@@ -42,7 +42,7 @@ class TelegramComponentProvider(IComponentProvider):
             return ComponentStatus.FAILED
         if component.is_authenticated():
             return ComponentStatus.READY
-        if component.is_monitoring_qr():
+        if component.is_authenticating():
             return ComponentStatus.DELAYED
         return ComponentStatus.FAILED
     @st.dialog("QR Code")
@@ -59,13 +59,14 @@ class TelegramComponentProvider(IComponentProvider):
         
         try:
             self.is_logging_in.set()
-            def handle_login_done(auth_phase:AuthPhase):
+            def handle_login_done(auth_state:AuthState):
                 self.is_logging_in.clear()
                     
             # Create an instance of the target class with the validated config
-            component = TelegramMessageScraper(**config.model_dump(), sync_auth=False, use_qr_login=True)
+            component = TelegramMessageScraper(**config.model_dump(), sync_auth=False)
             # Subscribe to the login event
-            component.subscribe_qr_login_listener(handle_login_done)
+            login_context:QrLoginContext = component.login_context
+            login_context.subscribe_done(handle_login_done)
         except Exception as e:
             logging.error(f"Failed to create component instance: {e}")
             raise Exception("Failed to create component instance:",e) from e
@@ -73,7 +74,7 @@ class TelegramComponentProvider(IComponentProvider):
         #===auth phase 2===
         
         # Display qrcode in popup
-        url = component.get_qr_url()
+        url = login_context.get_qr_url()
         qr = qrcode.QRCode()
         qr.add_data(url)
         qr.make(fit=True)

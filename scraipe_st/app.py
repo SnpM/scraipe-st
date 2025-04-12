@@ -116,7 +116,7 @@ class App:
                 st.session_state["links_df"] = edited_links
 
                 st.write(f"{len(edited_links)} links")
-                if (st.button("Generate 10 Links", key="generate_links", help="Generate links from Wikipedia")):
+                if (st.button("Generate Links", key="generate_links", help="Generate 10 random links from Wikipedia")):
                     links = get_random_wikipedia_links(10)
                     # append links to the dataframe. If dataframe has extra columns, just set to null
                     new_links_df = pd.DataFrame(

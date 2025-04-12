@@ -9,7 +9,7 @@ homepage = "https://github.com/snpm/scraipe-st"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"  # Correct placement of Python version requirement
-scraipe = {version = ">=0.1.52", extras = ["extended"]}
+scraipe = {version = "^0.1.54", extras = ["extended"]}
 streamlit = "*"
 streamlit-scroll-navigation="*"
 pandas = "*"
