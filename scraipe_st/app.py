@@ -169,47 +169,68 @@ class App:
 
                 provider:IComponentProvider = selected_option[0]
                     
-                description_holder = st.container(key=f"{comp}_description")
+                description_cont = st.container(key=f"{comp}_description")
                 # Configure the selected scisraper
                 schema = provider.get_config_schema()
                 config_key = f"config_{comp_key}"
                 config = st.session_state.get(config_key, None)
                 
-                                
+
                 if schema:
                     from pydantic import BaseModel
-                    config:BaseModel = sp.pydantic_form(
-                        f"{comp_key}_form", config or provider.get_default_config() or schema,
-                        submit_label="Configure")    
-                    if config is not None:
-                        try:
-                            #if config != st.session_state.get(config_key, None):
-                            # Unique submission was made, create the component
-                            st.session_state[comp_key] = provider.get_component(config)
-                        except Exception as e:
-                            import traceback
-                            traceback.print_exc()
-                            st.error(f"Error creating {comp}: {e}")
-                            st.session_state[comp_key] = None
-                        else:
-                            st.session_state[config_key] = config
+                    
+                    # Remove border from pydantic form
+                    css = r'''
+                        <style>
+                            [data-testid="stForm"] {border: 0px}
+                        </style>
+                    '''
+                    st.markdown(css, unsafe_allow_html=True)
+                    
+                    # Get the configured component if available
+                    component,status = st.session_state.get(comp_key, (None,None))
+
+                                        
+                    # Create the expander to contain form
+                    with st.expander("Details",expanded=True):
+                        config:BaseModel = sp.pydantic_form(
+                            f"{comp_key}_form", config or provider.get_default_config() or schema,
+                            submit_label="Configure")
+                        if config is not None:
+                            try:
+                                # Unique submission was made, create the component
+                                st.session_state[comp_key] = provider.get_component_and_status(config)
+                            except Exception as e:
+                                import traceback
+                                traceback.print_exc()
+                                st.error(f"Error creating {comp}: {e}")
+                                st.session_state[comp_key] = None
+                            else:
+                                st.session_state[config_key] = config
+                            component_is_new = True
+
 
                 else:
                     # No config needed, just get the component as needed
                     if st.session_state.get(comp_key) is None:
-                        st.session_state[comp_key] = provider.get_component(None)
+                        st.session_state[comp_key] = provider.get_component_and_status(None)
                 
-                component = st.session_state.get(comp_key, None)
+                # Render late update for additional configuration
+                component,_ = st.session_state.get(comp_key, (None,None))
+                provider.late_update(component)
+
+
+                # Display the component status in the description_cont container
                 description_str = f"**{metadata.name}**: {metadata.description}"
                 status = provider.get_component_status(component)
                 if status == ComponentStatus.READY:
                     # Add green checkmark if the component is good config
                     description_str = "✔️" + description_str
+                    st.session_state[comp_key] = (component, status)
                 else:
                     description_str = "⚠️" + description_str
-                description_holder.markdown(description_str)
+                description_cont.markdown(description_str)
                 
-                provider.late_update(component)
                                
                 return comp_key
         scraper_key = configure_component_loop("Scraper", self.component_repo.get_scrapers())
@@ -223,9 +244,9 @@ class App:
         #===Workflow===
         st.subheader("Run Workflow")
         def run_scrape_section():
-            scraper = st.session_state.get(scraper_key)
+            scraper,status = st.session_state.get(scraper_key,(None,None))
             workflow = self.get_workflow(scraper=scraper)
-            if scraper is None:
+            if status is None or status != ComponentStatus.READY:
                 st.warning("Configure a good scraper to scrape links.")
             else:
                 if st.button("Scrape"):
@@ -257,10 +278,10 @@ class App:
         st.divider()
                 
         def run_analyze_section():
-            analyzer = st.session_state.get(analyzer_key)
+            analyzer,status = st.session_state.get(analyzer_key,(None,None))
             workflow = self.get_workflow(analyzer=analyzer)
             
-            if analyzer is None:
+            if status is None or status != ComponentStatus.READY:
                 st.warning("Configure a good analyzer to analyze content.")
             else:
                 scrapes_df = workflow.get_scrapes()

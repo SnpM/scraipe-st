@@ -32,6 +32,7 @@ class IComponentProvider():
             Type[BaseModel]: The configuration model class.
         """
         ...
+        
     
     @abstractmethod
     def get_component(self, config:BaseModel) -> Any:
@@ -53,6 +54,17 @@ class IComponentProvider():
         if component is not None:
             return ComponentStatus.READY
         return ComponentStatus.FAILED
+    
+    def get_component_and_status(self, config:BaseModel) -> Tuple[Any, ComponentStatus]:
+        """
+        Get the component instance and its status based on the configuration.
+        
+        Returns:
+            Tuple[Any, ComponentStatus]: The component instance and its status.
+        """
+        component = self.get_component(config)
+        status = self.get_component_status(component)
+        return component, status
     
     def get_default_config(self) -> BaseModel:
         """

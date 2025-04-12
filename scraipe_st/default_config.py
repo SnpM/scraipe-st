@@ -78,14 +78,14 @@ _default_scrapers = [
     (RawScraper(), ComponentMetadata(
         name="Raw Scraper", description="Scrapes raw HTTP content.")),
     (TelegramComponentProvider(), ComponentMetadata(
-        name="Telegram Message Scraper", description="Scrapes messages from a Telegram channel.")),
+        name="Telegram Message Scraper", description="Scrapes messages from a Telegram channel. Configure the API ID and hash from https://my.telegram.org/apps. If 2FA is enabled, provide the password.")),
 ]
 
 
 import os
 default_llm_instruction = \
 """Read the attached document. Identify market gaps that are mentioned in the text. Focus on unmet needs or complaints.
-Output the result with the following JSON format:
+Output in the JSON:
 {
     "gaps": [need1, ...]
 }"""
