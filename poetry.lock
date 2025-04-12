@@ -469,7 +469,7 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "platform_system == \"Windows\"", dev = "sys_platform == \"win32\""}
+markers = {main = "platform_system == \"Windows\" or sys_platform == \"win32\"", dev = "sys_platform == \"win32\""}
 
 [[package]]
 name = "courlan"
@@ -841,14 +841,14 @@ speed = ["backports-datetime-fromisoformat ; python_version < \"3.11\"", "faust-
 
 [[package]]
 name = "httpcore"
-version = "1.0.7"
+version = "1.0.8"
 description = "A minimal low-level HTTP client."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "httpcore-1.0.7-py3-none-any.whl", hash = "sha256:a3fff8f43dc260d5bd363d9f9cf1830fa3a458b332856f34282de498ed420edd"},
-    {file = "httpcore-1.0.7.tar.gz", hash = "sha256:8551cb62a169ec7162ac7be8d4817d561f60e08eaa485234898414bb5a8a0b4c"},
+    {file = "httpcore-1.0.8-py3-none-any.whl", hash = "sha256:5254cf149bcb5f75e9d1b2b9f729ea4a4b883d1ad7379fc632b727cec23674be"},
+    {file = "httpcore-1.0.8.tar.gz", hash = "sha256:86e94505ed24ea06514883fd44d2bc02d90e77e7979c8eb71b90f41d364a1bad"},
 ]
 
 [package.dependencies]
@@ -2289,6 +2289,26 @@ files = [
 ]
 
 [[package]]
+name = "qrcode"
+version = "8.1"
+description = "QR Code image generator"
+optional = false
+python-versions = "<4.0,>=3.9"
+groups = ["main"]
+files = [
+    {file = "qrcode-8.1-py3-none-any.whl", hash = "sha256:9beba317d793ab8b3838c52af72e603b8ad2599c4e9bbd5c3da37c7dcc13c5cf"},
+    {file = "qrcode-8.1.tar.gz", hash = "sha256:e8df73caf72c3bace3e93d9fa0af5aa78267d4f3f5bc7ab1b208f271605a5e48"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "sys_platform == \"win32\""}
+
+[package.extras]
+all = ["pillow (>=9.1.0)", "pypng"]
+pil = ["pillow (>=9.1.0)"]
+png = ["pypng"]
+
+[[package]]
 name = "referencing"
 version = "0.36.2"
 description = "JSON Referencing + Python"
@@ -2572,14 +2592,14 @@ pyasn1 = ">=0.1.3"
 
 [[package]]
 name = "scraipe"
-version = "0.1.42"
+version = "0.1.51"
 description = "AI web scraping workflow."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "scraipe-0.1.42-py3-none-any.whl", hash = "sha256:3c257cfd24cfe01939b6cc2a3d6bd61dff13ac30b5010c074032f0137d5bbbdb"},
-    {file = "scraipe-0.1.42.tar.gz", hash = "sha256:3a4ee2625ef7b9a19e0090da1873933ea97769e138b338b1b94e497f88d96fbc"},
+    {file = "scraipe-0.1.51-py3-none-any.whl", hash = "sha256:01a9987a338d9a52814c8ac9a78e6d4596007c2f53a1444ca23f5552ed342dfa"},
+    {file = "scraipe-0.1.51.tar.gz", hash = "sha256:b56845784fd21bba5fd6d14db4abdc63fdf1bd6bcccc94efdb040eb75b56e216"},
 ]
 
 [package.dependencies]
@@ -2589,12 +2609,13 @@ google-genai = {version = ">=1.9.0", optional = true, markers = "extra == \"exte
 openai = {version = "1.68.2", optional = true, markers = "extra == \"extended\""}
 pandas = ">=2.2.3"
 pydantic = ">=2.10.6"
+qrcode = {version = "8.1", optional = true, markers = "extra == \"extended\""}
 telethon = {version = "1.39.0", optional = true, markers = "extra == \"extended\""}
 tqdm = "*"
 trafilatura = {version = "2.0.0", optional = true, markers = "extra == \"extended\""}
 
 [package.extras]
-extended = ["google-genai (>=1.9.0)", "openai (==1.68.2)", "telethon (==1.39.0)", "trafilatura (==2.0.0)"]
+extended = ["google-genai (>=1.9.0)", "openai (==1.68.2)", "qrcode (==8.1)", "telethon (==1.39.0)", "trafilatura (==2.0.0)"]
 
 [[package]]
 name = "six"
@@ -3191,4 +3212,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "7aeb6969655817c811e468392d2a7e274072f31f557da4c07187f50fc48290cc"
+content-hash = "75169a159e06f43ce362fbcf50c6ebae7cb997933ec1a6c6be0d3fec0b48e2af"

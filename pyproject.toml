@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "scraipe-st"
-version = "0.1.0"
+version = "0.1.5"
 description = "Scraipe Streamlit app."
 readme = "README.md"
 license = "MIT"
@@ -25,3 +25,6 @@ pytest-asyncio = "*"
 pytest-cov = "*"
 pytest-mock = "*"
 aioresponses = "*"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
