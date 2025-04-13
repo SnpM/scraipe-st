@@ -10,10 +10,10 @@ _default_links = [
     "https://example.com",
     "https://rickandmortyapi.com/api/character/1",
     "https://ckaestne.github.io/seai/",
-    "https://t.me/TelegramTips/515",
+    "https://t.me/thehackernews/6646",
     "https://en.wikipedia.org/wiki/CSS_Industries",
     "https://www.cmu.edu/policies/student-and-student-life/academic-integrity.html",
-    "https://privacy.cs.cmu.edu/masters/plan/courses/informationsecurity-privacy-and-policy.html",
+    "https://www.nytimes.com/2024/09/23/technology/ai-jim-covello-goldman-sachs.html",
 ]
 
 
