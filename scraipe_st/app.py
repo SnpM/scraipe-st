@@ -235,6 +235,7 @@ class App:
         
         #===Workflow===
         st.subheader("Run Workflow")
+        @st.fragment()
         def run_scrape_section():
             scraper,status = st.session_state.get(scraper_key,(None,None))
             workflow = self.get_workflow(scraper=scraper)
@@ -251,13 +252,13 @@ class App:
                     bar.progress(acc/len(links), text=f"Scraping {len(links)} links...")
                     acc += 1
                 bar.empty()
+                st.session_state["scrapes_df"] = workflow.get_scrapes()
                 
             if not can_run:
                 st.warning("Configure a good scraper to scrape links.")    
+            
+            scrapes_df = st.session_state.get("scrapes_df", None)
                 
-            scrapes_df = workflow.get_scrapes()
-            if "metadata" in scrapes_df.columns:
-                scrapes_df = scrapes_df.drop(columns=["metadata"])
             if scrapes_df is not None and len(scrapes_df) > 0:
                 column_config = {
                     "link": st.column_config.LinkColumn("Link", width="medium"),
@@ -268,12 +269,14 @@ class App:
                 st.dataframe(scrapes_df, use_container_width=True,
                     hide_index=True,
                     column_config=column_config,
+                    key="scrape_dataframe",
                 )
         with st.container(key="scrape_section",border=True):
             run_scrape_section()
         
         st.divider()
-                
+        
+        @st.fragment()
         def run_analyze_section():
             analyzer,status = st.session_state.get(analyzer_key,(None,None))
             workflow = self.get_workflow(analyzer=analyzer)
@@ -290,11 +293,12 @@ class App:
                     bar.progress(acc/scrapes_length, text=f"Analyzing {scrapes_length} content items....")
                     acc += 1
                 bar.empty()
+                st.session_state["analysis_df"] = workflow.get_analyses()
                 
             if not can_run:
                 st.warning("Configure a good analyzer to analyze content.")
                 
-            analysis_df = workflow.get_analyses()
+            analysis_df = st.session_state.get("analysis_df", None)
             if analysis_df is not None and len(analysis_df) > 0:
                 # Check for analysis_success column
                 if "analysis_success" in analysis_df.columns:
@@ -307,7 +311,11 @@ class App:
                     st.dataframe(analysis_df, use_container_width=True,
                         hide_index=True,
                         column_config=column_config,
+                        key="analyze_dataframe"
                     )
+                    
+                    # Fixes weird ghost element in UI bug
+                    st.empty()
         with st.container(key="analyze_section",border=True):
             run_analyze_section()
             
