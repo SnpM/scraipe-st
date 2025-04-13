@@ -86,36 +86,39 @@ class TelegramComponentProvider(IComponentProvider):
     def late_update(self, component):
         if self.is_logging_in is not None and self.is_logging_in.is_set():
             # Note: usage of qr_cont assumes that late_update will be called in same execution as get_component()
-            with self.qr_cont.container():
-                with st.spinner("Logging in..."):
-                    # Display qrcode in popup
-                    login_context = component.login_context
-                    url = login_context.get_qr_url()
-                    qr = qrcode.QRCode()
-                    qr.add_data(url)
-                    qr.make(fit=True)
-                    from io import BytesIO
-                    img = qr.make_image(fill_color="black", back_color="white")
-                    buf = BytesIO()
-                    img.save(buf)
-                    st.image(buf, caption="Scan this QR code with your Telegram app.")    
-                    def on_cancel():
-                        self.is_logging_in.clear()
-                        st.session_state["login_cancel"] = True
-                    st.button("Cancel", on_click=on_cancel) 
-                    
-                    acc = 0
-                    POLL_INTERVAL = .4
-                    while True:
-                        # Block until login completes
-                        st.write
-                        if not self.is_logging_in.is_set():
-                            # print("Login over, calling st.rerun()")
-                            # st.rerun(scope="app")
-                            break
-                        time.sleep(POLL_INTERVAL)
-                        acc
+            # login_cont = self.qr_cont.status(label="Logging in...")
+            
+            parent_cont = st.empty()
+            login_cont = parent_cont.status(label="Logging in...",expanded=True)
+            with login_cont:
+                # Display qrcode in popup
+                login_context = component.login_context
+                url = login_context.get_qr_url()
+                qr = qrcode.QRCode()
+                qr.add_data(url)
+                qr.make(fit=True)
+                from io import BytesIO
+                img = qr.make_image(fill_color="black", back_color="white")
+                buf = BytesIO()
+                img.save(buf)
+                st.image(buf, caption="Scan this QR code with your Telegram app.")    
+                def on_cancel():
+                    self.is_logging_in.clear()
+                    st.session_state["login_cancel"] = True
+                st.button("Cancel", on_click=on_cancel) 
+                
+                acc = 0
+                POLL_INTERVAL = .4
+                while True:
+                    # Block until login completes
+                    st.write
+                    if not self.is_logging_in.is_set():
+                        # print("Login over, calling st.rerun()")
+                        # st.rerun(scope="app")
+                        break
+                    time.sleep(POLL_INTERVAL)
+                    acc
                         
             assert self.auth_state_ref[0] is not None
             auth_state = self.auth_state_ref[0]
-            self.qr_cont.empty()
+            parent_cont.empty()
