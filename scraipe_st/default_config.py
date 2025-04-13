@@ -13,6 +13,7 @@ _default_links = [
     "https://t.me/TelegramTips/515",
     "https://en.wikipedia.org/wiki/CSS_Industries",
     "https://www.cmu.edu/policies/student-and-student-life/academic-integrity.html",
+    "https://privacy.cs.cmu.edu/masters/plan/courses/informationsecurity-privacy-and-policy.html",
 ]
 
 

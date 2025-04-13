@@ -15,7 +15,7 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 class TelegramSchema(BaseModel):
     password:str = Field(
         ..., description="Password for Telegram account. Only required if 2FA is enabled.",
-        st_kwargs_type="password", st_kwargs_placeholder="Optional")
+        st_kwargs_type="password", st_kwargs_placeholder="optional")
         
 class TelegramComponentProvider(IComponentProvider):
     is_logging_in:Event
@@ -113,7 +113,7 @@ class TelegramComponentProvider(IComponentProvider):
                 img = qr.make_image(fill_color="black", back_color="white")
                 buf = BytesIO()
                 img.save(buf)
-                st.image(buf, caption="Scan this QR code with your Telegram app.")    
+                st.image(buf, caption="Scan this QR code with your Telegram app (Settings → Devices → Link Desktop Device) ")    
                 def on_cancel():
                     self.is_logging_in.clear()
                     st.session_state["login_cancel"] = True
