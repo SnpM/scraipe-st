@@ -291,7 +291,10 @@ class App:
                     bar.progress(acc/len(links), text=f"Scraping {len(links)} links...")
                     acc += 1
                 bar.empty()
-                st.session_state["scrapes_df"] = workflow.get_scrapes().drop(columns="metadata")
+                df = workflow.get_scrapes()
+                if "df" in df.columns:
+                    df = df.drop(columns="metadata")
+                st.session_state["scrapes_df"] = df 
                 
             if not can_run:
                 st.warning("Configure a good scraper to scrape links.")    
