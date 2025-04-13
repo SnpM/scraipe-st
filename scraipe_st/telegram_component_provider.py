@@ -15,7 +15,7 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 class TelegramSchema(BaseModel):
     password:str = Field(
         ..., description="Password for Telegram account. Only required if 2FA is enabled.",
-        st_kwargs_type="password", st_kwargs_placeholder="Leave blank if not using 2FA.")
+        st_kwargs_type="password", st_kwargs_placeholder="Optional")
         
 class TelegramComponentProvider(IComponentProvider):
     is_logging_in:Event

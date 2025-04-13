@@ -79,7 +79,7 @@ _default_scrapers = [
     (RawScraper(), ComponentMetadata(
         name="Raw Scraper", description="Scrapes raw HTTP content.")),
     (TelegramComponentProvider(), ComponentMetadata(
-        name="Telegram Message Scraper", description="Scrapes messages from a Telegram channel. Configure the API ID and hash from https://my.telegram.org/apps. If 2FA is enabled, provide the password.")),
+        name="Telegram Message Scraper", description="Scrapes messages from a Telegram channel. Click Configure to log in.")),
 ]
 
 
