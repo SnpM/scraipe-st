@@ -252,7 +252,7 @@ class App:
                     bar.progress(acc/len(links), text=f"Scraping {len(links)} links...")
                     acc += 1
                 bar.empty()
-                st.session_state["scrapes_df"] = workflow.get_scrapes()
+                st.session_state["scrapes_df"] = workflow.get_scrapes().drop(columns="metadata")
                 
             if not can_run:
                 st.warning("Configure a good scraper to scrape links.")    
@@ -261,7 +261,7 @@ class App:
                 
             if scrapes_df is not None and len(scrapes_df) > 0:
                 column_config = {
-                    "link": st.column_config.LinkColumn("Link", width="medium"),
+                    "link": st.column_config.LinkColumn("Link", width="small"),
                     "content": st.column_config.TextColumn("Content", width="large"),
                     "scrape_success": st.column_config.CheckboxColumn("Success",width="small"),
                     "scrape_error": st.column_config.TextColumn("Error", width="small"),
@@ -271,6 +271,7 @@ class App:
                     column_config=column_config,
                     key="scrape_dataframe",
                 )
+                
         with st.container(key="scrape_section",border=True):
             run_scrape_section()
         
