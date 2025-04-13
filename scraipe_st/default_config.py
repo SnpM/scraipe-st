@@ -12,6 +12,7 @@ _default_links = [
     "https://ckaestne.github.io/seai/",
     "https://t.me/TelegramTips/515",
     "https://en.wikipedia.org/wiki/CSS_Industries",
+    "https://www.cmu.edu/policies/student-and-student-life/academic-integrity.html",
 ]
 
 def get_default_links():
