@@ -13,11 +13,6 @@ from threading import Event
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 class TelegramSchema(BaseModel):
-    api_id: str = Field(
-        ..., description="API ID from https://my.telegram.org/apps")
-    api_hash: str = Field(
-        ..., description="API Hash from https://my.telegram.org/apps",
-        st_kwargs_type="password")
     password:str = Field(
         ..., description="Password for Telegram account. Only required if 2FA is enabled.",
         st_kwargs_type="password", st_kwargs_placeholder="Leave blank if not using 2FA.")
@@ -25,7 +20,19 @@ class TelegramSchema(BaseModel):
 class TelegramComponentProvider(IComponentProvider):
     is_logging_in:Event
 
-    def __init__(self):
+    def __init__(self, api_id=None, api_hash=None):
+        if api_id is None:
+            api_id = os.getenv("TELEGRAM_API_ID", None)
+        if api_hash is None:
+            api_hash = os.getenv("TELEGRAM_API_HASH", None)
+        assert api_id is not None, "api_id is required. Set it in the config or in the environment variable TELEGRAM_API_ID."
+        assert api_hash is not None, "api_hash is required. Set it in the config or in the environment variable TELEGRAM_API_HASH."
+        
+        self.api_id = api_id
+        self.api_hash = api_hash
+        
+        # Provider is stateless across runs
+        # These variables just transfer state between get_component() and late_update()
         self.is_logging_in = None
         self.qr_cont = None
         self.auth_state_ref = None
@@ -56,6 +63,7 @@ class TelegramComponentProvider(IComponentProvider):
         except ValidationError as e:
             logging.error(f"Validation error: {e}")
             raise e
+        
         try:
             self.is_logging_in = Event()
             self.is_logging_in.set()
@@ -67,7 +75,11 @@ class TelegramComponentProvider(IComponentProvider):
                 self.auth_state_ref[0] = auth_state
                     
             # Create an instance of the target class with the validated config
-            component = TelegramMessageScraper(**config.model_dump(), sync_auth=False)
+            component = TelegramMessageScraper(
+                self.api_id,
+                self.api_hash,
+                **config.model_dump(),
+                sync_auth=False)
             # Subscribe to the login event
             login_context:QrLoginContext = component.login_context
             login_context.subscribe_done(handle_login_done)
