@@ -2620,14 +2620,14 @@ pyasn1 = ">=0.1.3"
 
 [[package]]
 name = "scraipe"
-version = "0.1.63"
+version = "0.1.64"
 description = "AI web scraping workflow."
 optional = false
 python-versions = "<4.0,>=3.10"
 groups = ["main"]
 files = [
-    {file = "scraipe-0.1.63-py3-none-any.whl", hash = "sha256:4785b9aab6bdcb4e0988580302f53441982d2c2c1a0defaa1568d6db14fba407"},
-    {file = "scraipe-0.1.63.tar.gz", hash = "sha256:e7bb85a464fdf918b510eaf2ea4414f4389b6197d20e82b0df15572d66c3c074"},
+    {file = "scraipe-0.1.64-py3-none-any.whl", hash = "sha256:7b7f6f7e6f37ca7fbb3f2ded7c28e0bb89a343413dfb641c60463ba240a34ee2"},
+    {file = "scraipe-0.1.64.tar.gz", hash = "sha256:04b3d14b0872733b2c481b06c490b674a8bd5199694d9f3133ad1603e46ada74"},
 ]
 
 [package.dependencies]
