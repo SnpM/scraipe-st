@@ -145,7 +145,7 @@ class App:
                     
                     st.rerun(scope="fragment")
                 
-                col_sizes = [.05,.12,.12,.08]
+                col_sizes = [.05,.16,.16,.12]
                 col_sizes += [1 - sum(col_sizes)]
                 cols = st.columns(col_sizes,vertical_alignment="center", gap="small")
                 with cols[0]:
