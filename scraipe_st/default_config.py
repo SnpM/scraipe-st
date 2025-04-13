@@ -15,6 +15,7 @@ _default_links = [
     "https://www.cmu.edu/policies/student-and-student-life/academic-integrity.html",
 ]
 
+
 def get_default_links():
     """
     Get the default links for the scrapers.

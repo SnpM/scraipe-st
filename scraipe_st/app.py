@@ -6,7 +6,8 @@ import pandas as pd
 from scraipe_st.default_config import get_default_links, register_default_components
 from scraipe import Workflow
 
-from utils import get_random_wikipedia_links
+from utils import get_random_wikipedia_links, get_tme_links
+
 
 # Monkey patch to fix import issue. Hopefully nothing breaks
 from pydantic_settings import BaseSettings
@@ -115,9 +116,8 @@ class App:
                 )
                 st.session_state["links_df"] = edited_links
 
-                st.write(f"{len(edited_links)} links")
-                if (st.button("Generate Links", key="generate_links", help="Generate 10 random links from Wikipedia")):
-                    links = get_random_wikipedia_links(10)
+                
+                def update_links(links,add=True):
                     # append links to the dataframe. If dataframe has extra columns, just set to null
                     new_links_df = pd.DataFrame(
                         data={
@@ -131,11 +131,50 @@ class App:
                             if col != "link":
                                 new_links_df[col] = None
                     
+                    # Ensure column type is str
+                    new_links_df["link"] = new_links_df["link"].astype(str)
+    
+                    if add:
+                        final_df = pd.concat( [links_df, new_links_df], ignore_index=True)
+                    else:
+                        final_df = new_links_df
                     # When programatically changing the dataframe going into the data_editor,
-                    # update both teh initial and edited dataframes and rerun
-                    st.session_state["initial_links_df"] = pd.concat([links_df, new_links_df], ignore_index=True)
-                    st.session_state["links_df"] = pd.concat([links_df, new_links_df], ignore_index=True)
+                    # update both the initial and edited dataframes and rerun                        
+                    st.session_state["links_df"] = final_df
+                    st.session_state["initial_links_df"] = final_df
+                    
                     st.rerun(scope="fragment")
+                
+                col_sizes = [.05,.12,.12,.08]
+                col_sizes += [1 - sum(col_sizes)]
+                cols = st.columns(col_sizes,vertical_alignment="center", gap="small")
+                with cols[0]:
+                    st.write(f"{len(edited_links)} links")
+
+                with cols[1]:
+                    if (st.button(
+                            "Add Wikipedia Links", key="generate_wiki_links", 
+                            help="Generate 10 random links from Wikipedia",
+                            use_container_width=True
+                        )):
+                        links = get_random_wikipedia_links(10)
+                        update_links(links)
+                with cols[2]:
+                    if (st.button(
+                            "Add Telegram Links", key="generate_tme_links",
+                            help="Generate 10 random links from Telegram",
+                            use_container_width=True
+                        )):
+                        links = get_tme_links(10)
+                        update_links(links)
+                with cols[3]:
+                    if (st.button(
+                            "Clear Links", key="clear_links",
+                            help="Clear all links",
+                            use_container_width=True
+                        )):
+                        update_links([],add=False)
+                    
             links_fragment()
                 
             

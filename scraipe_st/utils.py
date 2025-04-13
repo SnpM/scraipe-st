@@ -7,6 +7,8 @@ import requests
 import aiohttp
 import asyncio
 from scraipe.async_util.async_manager import AsyncManager
+import random
+import numpy as np
 
 def label2anchor(label:str) -> str:
     """
@@ -47,3 +49,25 @@ def get_random_wikipedia_links(n=10):
         list: A list of random Wikipedia links.
     """
     return AsyncManager.get_executor().run(_get_random_wikipedia_links(n))
+
+tme_messageid_space =  np.arange(1, 1000)
+tme_channel_space = [
+    "https://t.me/binancesignals",
+    "https://t.me/carnegiemellonuniversity",
+    "https://t.me/telegram",
+    "https://t.me/TheHackerNews",
+]
+def get_tme_links(n=10):
+    """
+    Get n random Telegram links.
+    
+    Args:
+        n (int): The number of random links to get.
+        
+    Returns:
+        list: A list of random Telegram links.
+    """
+    channels = np.random.choice(tme_channel_space, size=n, replace=True)
+    message_ids = np.random.choice(tme_messageid_space, size=n, replace=False)
+    links = [f"{c}/{m}" for c, m in zip(channels, message_ids)]
+    return links
