@@ -75,7 +75,7 @@ _default_scrapers = [
     (TextScraper(), ComponentMetadata(
         name="Text Scraper", description="Scrapes visible text from a website.")),
     (NewsScraper(), ComponentMetadata(
-        name="News Scraper", description="Scrapes and cleans news articles.")),
+        name="News Scraper", description="Scrapes and cleans article sites with Trafilatura.")),
     (RawScraper(), ComponentMetadata(
         name="Raw Scraper", description="Scrapes raw HTTP content.")),
     (TelegramComponentProvider(), ComponentMetadata(
