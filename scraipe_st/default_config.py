@@ -88,7 +88,7 @@ _default_scrapers = [
 import os
 default_llm_instruction = \
 """Read the attached document. Identify market gaps that are mentioned in the text. Focus on unmet needs or complaints.
-Output in the JSON:
+Output in JSON:
 {
     "gaps": [need1, ...]
 }"""
