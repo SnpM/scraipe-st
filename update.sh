@@ -13,7 +13,7 @@ fi
 # Function to clear Poetry cache
 clear_poetry_cache() {
   echo "Clearing Poetry cache for $PACKAGE..."
-  poetry cache clear PyPI --all
+  poetry cache clear PyPI --all --no-interaction || true
 }
 
 # Function to check if the package with the version is available
@@ -23,10 +23,8 @@ check_package_version() {
   return $?
 }
 
-# Step 1: Clear cache
-clear_poetry_cache
 
-# Step 2 & 3: Check for version in search output, retry if not found
+# Check for version in search output, retry if not found
 MAX_RETRIES=5
 RETRY_DELAY=5
 
