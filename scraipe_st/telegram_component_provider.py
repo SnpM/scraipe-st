@@ -112,7 +112,7 @@ class TelegramComponentProvider(IComponentProvider):
                 img = qr.make_image(fill_color="black", back_color="white")
                 buf = BytesIO()
                 img.save(buf)
-                st.image(buf, caption="Scan this QR code with your Telegram app (Settings → Devices → Link Desktop Device) ")    
+                st.image(buf, caption="Scan this QR code with your Telegram app \n(Settings → Devices → Link Desktop Device) ", width=275)   
                 def on_cancel():
                     self.is_logging_in.clear()
                     st.session_state["login_cancel"] = True
