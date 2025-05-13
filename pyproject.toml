@@ -6,6 +6,8 @@ readme = "README.md"
 license = "MIT"
 authors = ["Nibs"]
 homepage = "https://github.com/snpm/scraipe-st"
+packages = []
+
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"  # Correct placement of Python version requirement
