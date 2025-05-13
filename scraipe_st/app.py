@@ -6,7 +6,7 @@ import pandas as pd
 from scraipe_st.default_config import get_default_links, register_default_components
 from scraipe import Workflow
 
-from utils import get_random_wikipedia_links, get_tme_links
+from utils import get_random_wikipedia_links, get_tme_links, get_reddit_links
 
 
 # Monkey patch to fix import issue. Hopefully nothing breaks
@@ -18,9 +18,8 @@ import streamlit_pydantic as sp
 class App:
     nav_pairs = [
         ("Links", "Edit Links"),
-        ("Scraper", "Configure Scraper"),
-        ("Analyzer", "Configure Analyzer"),
-        ("Workflow", "Run Workflow"),]
+        ("Scrape", "Scrape"),
+        ("Analyze", "Analyze"),]
     nav_labels = [pair[0] for pair in nav_pairs]
     nav_anchors = [label2anchor(pair[1]) for pair in nav_pairs]
     version:str
@@ -145,7 +144,7 @@ class App:
                     
                     st.rerun(scope="fragment")
                 
-                col_sizes = [.05,.16,.16,.12]
+                col_sizes = [.05,.16,.16,.16,.12]
                 col_sizes += [1 - sum(col_sizes)]
                 cols = st.columns(col_sizes,vertical_alignment="center", gap="small")
                 with cols[0]:
@@ -169,6 +168,14 @@ class App:
                         update_links(links)
                 with cols[3]:
                     if (st.button(
+                            "Add Reddit Links", key="generate_reddit_links",
+                            help="Get 10 links from Reddit",
+                            use_container_width=True
+                        )):
+                        links = get_reddit_links(10)
+                        update_links(links)
+                with cols[4]:
+                    if (st.button(
                             "Clear Links", key="clear_links",
                             help="Clear all links",
                             use_container_width=True
@@ -180,11 +187,7 @@ class App:
             
         st.divider()
         
-        #===Scrapers===
-        ## Display the selected scraper's metadata
-        def configure_component_loop(comp:str, provider_options:list):
-            st.subheader(f"Configure {comp}")
-        
+        def configure_component_loop(comp:str, provider_options:list):       
             # Select a scraper from the component repository
             option_indices = list(range(len(provider_options)))
             
@@ -264,16 +267,12 @@ class App:
                 
                                
                 return comp_key
+        #===Scrapers===
+        st.subheader("Scrape")
+
         scraper_key = configure_component_loop("Scraper", self.component_repo.get_scrapers())
-        st.divider()
         
-        #===Analyzers===
-        analyzer_key = configure_component_loop("Analyzer", self.component_repo.get_analyzers())
-        st.divider()
-        
-        
-        #===Workflow===
-        st.subheader("Run Workflow")
+        # Run box for scrapers
         @st.fragment()
         def run_scrape_section():
             scraper,status = st.session_state.get(scraper_key,(None,None))
@@ -281,13 +280,13 @@ class App:
             
             can_run = status is not None and status == ComponentStatus.READY
 
-            if st.button("Scrape", key="run_scrape", disabled=not can_run):
+            if st.button("Run Scraper", key="run_scrape", disabled=not can_run):
                 links_df = st.session_state.get("links_df")
                 links = links_df["link"].tolist()
                 bar = st.progress(0.0, text="Scraping...")
                 acc = 0
                 workflow.clear_scrapes()
-                for result in workflow.scrape_generator(links, overwrite=True):
+                for result in workflow.get_scrape_generator(links, overwrite=True):
                     bar.progress(acc/len(links), text=f"Scraping {len(links)} links...")
                     acc += 1
                 bar.empty()
@@ -297,28 +296,32 @@ class App:
                 st.session_state["scrapes_df"] = df 
                 
             if not can_run:
-                st.warning("Configure a good scraper to scrape links.")    
+                st.warning("Configure before scraping.")    
             
             scrapes_df = st.session_state.get("scrapes_df", None)
+            
+            with st.expander("Scrape Results", expanded=True):
+                if scrapes_df is not None and len(scrapes_df) > 0:
+                    column_config = {
+                        "link": st.column_config.LinkColumn("Link", width="small"),
+                        "content": st.column_config.TextColumn("Content", width="large"),
+                        "scrape_success": st.column_config.CheckboxColumn("Success",width="small"),
+                        "scrape_error": st.column_config.TextColumn("Error", width="small"),
+                    }
+                    st.dataframe(scrapes_df, use_container_width=True,
+                        hide_index=True,
+                        column_config=column_config,
+                        key="scrape_dataframe",
+                    )
                 
-            if scrapes_df is not None and len(scrapes_df) > 0:
-                column_config = {
-                    "link": st.column_config.LinkColumn("Link", width="small"),
-                    "content": st.column_config.TextColumn("Content", width="large"),
-                    "scrape_success": st.column_config.CheckboxColumn("Success",width="small"),
-                    "scrape_error": st.column_config.TextColumn("Error", width="small"),
-                }
-                st.dataframe(scrapes_df, use_container_width=True,
-                    hide_index=True,
-                    column_config=column_config,
-                    key="scrape_dataframe",
-                )
-                
-        with st.container(key="scrape_section",border=True):
-            run_scrape_section()
+        run_scrape_section()
         
-        st.divider()
+        st.divider()        
+        #===Analyzers===
+        st.subheader("Analyze")
+        analyzer_key = configure_component_loop("Analyzer", self.component_repo.get_analyzers())    
         
+        # Run box for analyzers    
         @st.fragment()
         def run_analyze_section():
             analyzer,status = st.session_state.get(analyzer_key,(None,None))
@@ -326,41 +329,43 @@ class App:
             
             can_run = status is not None and status == ComponentStatus.READY
             
-            if st.button("Analyze", key="run_analyze", disabled=not can_run):
+            if st.button("Run Analyzer", key="run_analyze", disabled=not can_run):
                 workflow.clear_analyses()
                 bar = st.progress(0.0, text="Analyzing...")
                 scrapes_df = workflow.get_scrapes()
                 scrapes_length = len(scrapes_df) if scrapes_df is not None else 0
                 acc = 0
-                for result in workflow.analyze_generator(overwrite=True):
+                for result in workflow.get_analyze_generator(overwrite=True):
                     bar.progress(acc/scrapes_length, text=f"Analyzing {scrapes_length} content items....")
                     acc += 1
                 bar.empty()
                 st.session_state["analysis_df"] = workflow.get_analyses()
                 
             if not can_run:
-                st.warning("Configure a good analyzer to analyze content.")
+                st.warning("Configure before analyzing.")
                 
             analysis_df = st.session_state.get("analysis_df", None)
-            if analysis_df is not None and len(analysis_df) > 0:
-                # Check for analysis_success column
-                if "analysis_success" in analysis_df.columns:
-                    column_config = {
-                        "output": st.column_config.JsonColumn("Output", width="large"),
-                        "link": st.column_config.LinkColumn("Link", width="medium"),
-                        "analysis_success": st.column_config.CheckboxColumn("Success",width="small"),
-                        "analysis_error": st.column_config.TextColumn("Error", width="small"),
-                    }
-                    st.dataframe(analysis_df, use_container_width=True,
-                        hide_index=True,
-                        column_config=column_config,
-                        key="analyze_dataframe"
-                    )
-                    
-                    # Fixes weird ghost element in UI bug
-                    st.empty()
-        with st.container(key="analyze_section",border=True):
-            run_analyze_section()
+            
+            with st.expander("Analysis Results", expanded=True):
+                if analysis_df is not None and len(analysis_df) > 0:
+                    # Check for analysis_success column
+                    if "analysis_success" in analysis_df.columns:
+                        column_config = {
+                            "output": st.column_config.JsonColumn("Output", width="large"),
+                            "link": st.column_config.LinkColumn("Link", width="medium"),
+                            "analysis_success": st.column_config.CheckboxColumn("Success",width="small"),
+                            "analysis_error": st.column_config.TextColumn("Error", width="small"),
+                        }
+                        st.dataframe(analysis_df, use_container_width=True,
+                            hide_index=True,
+                            column_config=column_config,
+                            key="analyze_dataframe"
+                        )
+                        
+                        # Fixes weird ghost element in UI bug
+                        st.empty()
+        #with st.container(key="analyze_section",border=True):
+        run_analyze_section()
             
 def serve():
     """

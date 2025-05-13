@@ -9,6 +9,9 @@ import asyncio
 from scraipe.async_util.async_manager import AsyncManager
 import random
 import numpy as np
+import logging
+
+import scraipe.extended
 
 def label2anchor(label:str) -> str:
     """
@@ -71,3 +74,60 @@ def get_tme_links(n=10):
     message_ids = np.random.choice(tme_messageid_space, size=n, replace=False)
     links = [f"{c}/{m}" for c, m in zip(channels, message_ids)]
     return links
+
+
+from scraipe.extended import RedditLinkCollector
+import CONFIG
+import asyncpraw
+
+subreddits = [
+    "bjj",
+    "osint",
+    "opensource",
+    "python",
+    "colorado",
+    "programming",
+    "datascience"
+]
+def get_reddit_links(n=10):
+    """
+    Get n random Reddit links.
+    
+    Args:
+        n (int): The number of random links to get.
+        
+    Returns:
+        list: A list of random Reddit links.
+    """
+    if not CONFIG.REDDIT_CLIENT_ID or not CONFIG.REDDIT_CLIENT_SECRET:
+        logging.error("Reddit client ID and secret must be configured in environment variables.")
+        return []
+    
+    async def _get_reddit_links(n=10):
+        """
+        Get n random Reddit links.
+        
+        Args:
+            n (int): The number of random links to get.
+            
+        Returns:
+            list: A list of random Reddit links.
+        """
+        client = asyncpraw.Reddit(
+            client_id=CONFIG.REDDIT_CLIENT_ID,
+            client_secret=CONFIG.REDDIT_CLIENT_SECRET,
+            user_agent="scraipe_st random gen (u/petertigerr)",)
+        
+        
+        links = []
+        async with client:
+            subreddit = random.choice(subreddits)
+            subreddit = await client.subreddit(subreddit)
+            
+            async for submission in subreddit.top(limit=n * 5):
+                link = "https://reddit.com" + submission.permalink
+                links.append(link)
+        return random.sample(links, n)
+    return AsyncManager.get_executor().run(_get_reddit_links(n))
+            
+    

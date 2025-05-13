@@ -66,14 +66,20 @@ class DefaultcomponentProvider(IComponentProvider):
 
 from typing_extensions import Annotated
 from pydantic import Field
-class LlmAnalyzerSchema(BaseModel):
-    api_key: str = Field(
-        ..., description="API key for the LLM service.",
-        st_kwargs_type="password")
-    instruction:str = Field(
-        ..., format="multi-line", description="Craft an instruction prompt to tell the LLM how to analyze the content.",
-        st_kwargs_height=150,)
 
+#===Scraper Configuration====
+
+from scraipe.extended import RedditSubmissionScraper
+class RedditScraperSchema(BaseModel):
+    client_id: str = Field(
+        ..., description="Client API key for the Reddit API.", st_kwargs_type="password")
+    client_secret: str = Field(
+        ..., description="Client secret for the Reddit API.", st_kwargs_type="password")
+
+default_reddit_config = RedditScraperSchema(
+    client_id=CONFIG.REDDIT_CLIENT_ID,
+    client_secret=CONFIG.REDDIT_CLIENT_SECRET
+)
 _default_scrapers = [
     (TextScraper(), ComponentMetadata(
         name="Text Scraper", description="Scrapes visible text from a website.")),
@@ -83,10 +89,20 @@ _default_scrapers = [
         name="Raw Scraper", description="Scrapes raw HTTP content.")),
     (TelegramComponentProvider(), ComponentMetadata(
         name="Telegram Message Scraper", description="Scrapes messages from a Telegram channel. Click Configure to log in with QR scan.")),
+    (DefaultcomponentProvider(RedditScraperSchema, target_class= RedditSubmissionScraper, default_config=default_reddit_config), ComponentMetadata(
+        name="Reddit Submission Scraper",
+        description="Scrapes Reddit posts. Configure [the API key](https://www.reddit.com/prefs/apps) and secret.")),
 ]
 
+#===LLM Analyzer Configuration===
+class LlmAnalyzerSchema(BaseModel):
+    api_key: str = Field(
+        ..., description="API key for the LLM service.",
+        st_kwargs_type="password")
+    instruction:str = Field(
+        ..., format="multi-line", description="Craft an instruction prompt to tell the LLM how to analyze the content.",
+        st_kwargs_height=150,)
 
-import os
 default_llm_instruction = \
 """Read the attached document. Identify market gaps that are mentioned in the text. Focus on unmet needs or complaints.
 Output in JSON:
