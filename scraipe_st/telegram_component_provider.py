@@ -11,8 +11,15 @@ import streamlit as st
 import time
 from threading import Event
 from streamlit.runtime.scriptrunner import get_script_run_ctx
+from scraipe_st import CONFIG
 
 class TelegramSchema(BaseModel):
+    api_id:str = Field(
+        ..., description="Telegram API ID. Can be preconfigured in TELEGRAM_API_ID environment var.",
+        st_kwargs_type="password"),
+    api_hash:str = Field(
+        ..., description="Telegram API Hash. Can be preconfigured in TELEGRAM_API_HASH environment var.",
+        st_kwargs_type="password")
     password:str = Field(
         ..., description="Password for Telegram account. Only required if 2FA is enabled.",
         st_kwargs_type="password", st_kwargs_placeholder="optional")
@@ -20,16 +27,7 @@ class TelegramSchema(BaseModel):
 class TelegramComponentProvider(IComponentProvider):
     is_logging_in:Event
 
-    def __init__(self, api_id=None, api_hash=None):
-        if api_id is None:
-            api_id = os.getenv("TELEGRAM_API_ID", None)
-        if api_hash is None:
-            api_hash = os.getenv("TELEGRAM_API_HASH", None)
-        assert api_id is not None, "api_id is required. Set it in the config or in the environment variable TELEGRAM_API_ID."
-        assert api_hash is not None, "api_hash is required. Set it in the config or in the environment variable TELEGRAM_API_HASH."
-        
-        self.api_id = api_id
-        self.api_hash = api_hash
+    def __init__(self):
         
         # Provider is stateless across runs
         # These variables just transfer state between get_component() and late_update()
@@ -42,9 +40,9 @@ class TelegramComponentProvider(IComponentProvider):
     def get_default_config(self):
         # Try to populate with environment variables
         return TelegramSchema(
-            api_id=os.getenv("TELEGRAM_API_ID", ""),
-            api_hash=os.getenv("TELEGRAM_API_HASH", ""),
-            password=os.getenv("TELEGRAM_PASSWORD", ""),
+            api_id=CONFIG.TELEGRAM_API_ID,
+            api_hash=CONFIG.TELEGRAM_API_HASH,
+            password=CONFIG.TELEGRAM_PASSWORD,
         )
         
     def get_component_status(self, component:TelegramMessageScraper):
@@ -68,7 +66,6 @@ class TelegramComponentProvider(IComponentProvider):
             self.is_logging_in = Event()
             self.is_logging_in.set()
             self.auth_state_ref = [None]
-            run_context = get_script_run_ctx()
             
             def handle_login_done(auth_state:AuthState):
                 self.is_logging_in.clear()
@@ -76,16 +73,18 @@ class TelegramComponentProvider(IComponentProvider):
                     
             # Create an instance of the target class with the validated config
             component = TelegramMessageScraper(
-                self.api_id,
-                self.api_hash,
-                **config.model_dump(),
+                validated_config.api_id,
+                validated_config.api_hash,
+                validated_config.password,
                 sync_auth=False)
             # Subscribe to the login event
             login_context:QrLoginContext = component.login_context
             login_context.subscribe_done(handle_login_done)
         except Exception as e:
             logging.error(f"Failed to create component instance: {e}")
-            raise Exception("Failed to create component instance:",e) from e
+            self.is_logging_in.clear()
+            st.error(f"Failed to create component instance: {e}")
+            return None
 
         self.qr_cont = st.empty()
         component:TelegramMessageScraper
@@ -95,7 +94,7 @@ class TelegramComponentProvider(IComponentProvider):
         return component
             
     
-    def late_update(self, component):
+    def late_update(self, component):        
         if self.is_logging_in is not None and self.is_logging_in.is_set():
             # Note: usage of qr_cont assumes that late_update will be called in same execution as get_component()
             # login_cont = self.qr_cont.status(label="Logging in...")

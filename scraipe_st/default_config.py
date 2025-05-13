@@ -5,6 +5,7 @@ from pydantic import BaseModel, ValidationError
 from scraipe import IAnalyzer, IScraper
 import logging
 from scraipe_st.telegram_component_provider import TelegramComponentProvider
+from scraipe_st import CONFIG
 
 _default_links = [
     "https://example.com",
@@ -81,7 +82,7 @@ _default_scrapers = [
     (RawScraper(), ComponentMetadata(
         name="Raw Scraper", description="Scrapes raw HTTP content.")),
     (TelegramComponentProvider(), ComponentMetadata(
-        name="Telegram Message Scraper", description="Scrapes messages from a Telegram channel. Click Configure to log in.")),
+        name="Telegram Message Scraper", description="Scrapes messages from a Telegram channel. Click Configure to log in with QR scan.")),
 ]
 
 
@@ -93,11 +94,11 @@ Output in JSON:
     "gaps": [need1, ...]
 }"""
 default_openai_config = LlmAnalyzerSchema(
-    api_key=os.getenv("OPENAI_API_KEY", ""),
+    api_key=CONFIG.OPENAI_API_KEY,
     instruction=default_llm_instruction
     )
 default_gemini_config = LlmAnalyzerSchema(
-    api_key=os.getenv("GEMINI_API_KEY", ""),
+    api_key=CONFIG.GEMINI_API_KEY,
     instruction=default_llm_instruction
     )
 _default_analyzers = [
