@@ -85,7 +85,7 @@ class App:
             except Exception as e:
                 st.error("Unable to read the file. Please check the file format.")
             
-            if df: 
+            if df is not None:
                 # Validate the dataframe has a 'links' column case insensitive
                 if "link" not in df.columns:
                     st.error("The uploaded file must contain URL links in the 'link' column")
