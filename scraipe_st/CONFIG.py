@@ -1,6 +1,5 @@
 import os
-from warnings import warn
-
+import logging
 # Telegram secrets
 TELEGRAM_API_ID = os.getenv("TELEGRAM_API_ID", "")
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH", "")
@@ -20,4 +19,4 @@ for var_name in required:
     if not globals()[var_name]:
         unconfigured.append(var_name)
 if len(unconfigured) > 0:
-    warn(f"The following credentials are not configured. They must be configured in the GUI.\n {', '.join(unconfigured)}")
+    logging.warning(f"The following credentials are not configured in the environment. They must be configured in the GUI.\n {', '.join(unconfigured)}")
